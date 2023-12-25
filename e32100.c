@@ -49,8 +49,12 @@ void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GP
 }
 
 void E32100_SetMode(E32100_Mode_e mode){
-	uint8_t _m0 = (uint8_t)mode & (1U<<0);
-	uint8_t _m1 = (uint8_t)mode & (1U<<1);
+
+	uint8_t _m0 = 0;
+	uint8_t _m1 = 0;
+
+	if(((uint8_t)mode & (1U<<0))>0) _m0 = 1;
+	if(((uint8_t)mode & (1U<<1))>0) _m1 = 1;
 
 	HAL_GPIO_WritePin(E32100_handle.M0_GPIOx, E32100_handle.M0_Pin, _m0);
 	HAL_GPIO_WritePin(E32100_handle.M1_GPIOx, E32100_handle.M1_Pin, _m1);
@@ -76,8 +80,6 @@ void E32100_SetConfig(E32100_Config_t config, bool save){
 	param[5] = E32100_OptionByte(config.option);
 
 	HAL_UART_Transmit(E32100_huart, param, 6, 100);
-
-	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
 void E32100_SetDefaultConfig(void){
@@ -98,27 +100,32 @@ void E32100_SetDefaultConfig(void){
 	conf.option.txPower = E32100_TXPOWER_20;
 
 	E32100_SetConfig(conf, false);
+
+	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
 void E32100_Command(E32100_Command_e cmd){
 	if(E32100_handle.mode!=E32100_MODE_SLEEP) E32100_SetMode(E32100_MODE_SLEEP);
 	uint8_t param[3] = {cmd,cmd,cmd};
 	HAL_UART_Transmit(E32100_huart, param, 3, 100);
-	E32100_SetMode(E32100_MODE_NORMAL);
+	HAL_Delay(E32100_COMMAND_INTERVAL);
 }
 
 void E32100_Reset(void){
 	E32100_Command(E32100_CMD_RESET);
+	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
 void E32100_GetConfig(uint8_t * buffer){
 	E32100_Command(E32100_CMD_READ_CFG);
-	HAL_UARTEx_ReceiveToIdle_DMA(E32100_huart, buffer, 8);
+	HAL_UART_Receive(E32100_huart, buffer, 6, 100);
+	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
 void E32100_GetModuleVersion(uint8_t * buffer){
 	E32100_Command(E32100_CMD_MODULE);
-	HAL_UARTEx_ReceiveToIdle_DMA(E32100_huart, buffer, 8);
+	HAL_UART_Receive(E32100_huart, buffer, 6, 100);
+	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
 void E32100_Transmit(const uint8_t* payload, uint8_t size){
