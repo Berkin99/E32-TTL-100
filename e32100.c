@@ -66,7 +66,10 @@ void E32100_SetMode(E32100_Mode_e mode){
 
 void E32100_SetConfig(E32100_Config_t config, bool save){
 
-	if(E32100_handle.mode!=E32100_MODE_SLEEP) E32100_SetMode(E32100_MODE_SLEEP);
+	if(E32100_handle.mode!=E32100_MODE_SLEEP) {
+		E32100_SetMode(E32100_MODE_SLEEP);
+		HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
+	}
 
 	uint8_t param[6];
 
@@ -100,12 +103,14 @@ void E32100_SetDefaultConfig(void){
 	conf.option.txPower = E32100_TXPOWER_20;
 
 	E32100_SetConfig(conf, false);
-
 	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
 void E32100_Command(E32100_Command_e cmd){
-	if(E32100_handle.mode!=E32100_MODE_SLEEP) E32100_SetMode(E32100_MODE_SLEEP);
+	if(E32100_handle.mode!=E32100_MODE_SLEEP) {
+		E32100_SetMode(E32100_MODE_SLEEP);
+		HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
+	}
 	uint8_t param[3] = {cmd,cmd,cmd};
 	HAL_UART_Transmit(E32100_huart, param, 3, 100);
 	HAL_Delay(E32100_COMMAND_INTERVAL);
@@ -129,7 +134,6 @@ void E32100_GetModuleVersion(uint8_t * buffer){
 }
 
 void E32100_Transmit(const uint8_t* payload, uint8_t size){
-	if(E32100_handle.mode!=E32100_MODE_NORMAL)E32100_SetMode(E32100_MODE_NORMAL);
 	HAL_UART_Transmit(E32100_huart, payload, size, 100);
 }
 
