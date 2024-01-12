@@ -11,6 +11,7 @@
  *  Changeable all possible settings.
  *
  *  22.12.2023 : Created E32-TTL-100 module driver.
+ *	12.01.2024 : AUX Pin taken into account.
  *
  *  References:
  *  [0] e32-ttl-100-datasheet-en-v1-0.pdf
@@ -26,10 +27,8 @@
 
 static UART_HandleTypeDef *E32100_huart;
 static E32100_Handle_t E32100_handle;
+static uint8_t buffer[E32100_MAX_BUFFER_LEN];
 
-static uint8_t buffer [E32100_MAX_BUFFER_LEN];
-
-void E32100_Command(E32100_Command_e cmd);
 
 void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GPIO_TypeDef * M1_t, uint16_t M1, GPIO_TypeDef * AUX_t, uint16_t AUX){
 
@@ -46,9 +45,26 @@ void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GP
 
 	E32100_SetMode(E32100_MODE_NORMAL);
 	E32100_handle.mode = E32100_MODE_NORMAL;
+
+	E32100_WaitAUX_H(1000);
+}
+
+uint8_t E32100_TestConnection(void){
+	E32100_WaitAUX_H(10);
+	if(!E32100_ReadAUX()) return 0;
+
+	uint8_t temp;
+	E32100_GetConfig(&temp);
+	if(temp!=0){
+		return 1;
+	}
+	return 0;
 }
 
 void E32100_SetMode(E32100_Mode_e mode){
+
+	E32100_WaitAUX_H(10);
+	if(!E32100_ReadAUX()) return;
 
 	uint8_t _m0 = 0;
 	uint8_t _m1 = 0;
@@ -58,8 +74,8 @@ void E32100_SetMode(E32100_Mode_e mode){
 
 	HAL_GPIO_WritePin(E32100_handle.M0_GPIOx, E32100_handle.M0_Pin, _m0);
 	HAL_GPIO_WritePin(E32100_handle.M1_GPIOx, E32100_handle.M1_Pin, _m1);
-
 	E32100_handle.mode = mode;
+
 
 	HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
 }
@@ -111,13 +127,16 @@ void E32100_Command(E32100_Command_e cmd){
 		E32100_SetMode(E32100_MODE_SLEEP);
 		HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
 	}
+
 	uint8_t param[3] = {cmd,cmd,cmd};
-	HAL_UART_Transmit(E32100_huart, param, 3, 100);
+	HAL_UART_Transmit(E32100_huart, param, 3, 10);
 	HAL_Delay(E32100_COMMAND_INTERVAL);
 }
 
+
 void E32100_Reset(void){
 	E32100_Command(E32100_CMD_RESET);
+	E32100_WaitAUX_H(1000);
 	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
@@ -133,8 +152,26 @@ void E32100_GetModuleVersion(uint8_t * buffer){
 	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
-void E32100_Transmit(const uint8_t* payload, uint8_t size){
-	HAL_UART_Transmit(E32100_huart, payload, size, 100);
+
+uint8_t E32100_ReadAUX(void){
+	return (uint8_t)HAL_GPIO_ReadPin(E32100_handle.AUX_GPIOx, E32100_handle.AUX_Pin);
+}
+
+void E32100_WaitAUX_H(uint16_t timeout_ms){
+	uint16_t cnt = 0 ;
+	while(cnt < timeout_ms && !E32100_ReadAUX()){
+		cnt++;
+		HAL_Delay(1);
+	}
+}
+
+void E32100_Transmit(const uint8_t* payload, uint16_t size){
+	if(!E32100_ReadAUX()){
+		E32100_WaitAUX_H(E32100_TRANSMIT_TIMEOUT);
+		if(!E32100_ReadAUX()) return;
+	}
+	if(size>E32100_MAX_BUFFER_LEN) return;
+	HAL_UART_Transmit_DMA(E32100_huart, payload, size);
 }
 
 void E32100_Receive(void){

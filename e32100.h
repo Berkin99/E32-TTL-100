@@ -11,6 +11,7 @@
  *  Changeable all possible settings.
  *
  *  22.12.2023 : Created E32-TTL-100 module driver.
+ *	12.01.2024 : AUX Pin taken into account.
  *
  *  References:
  *  [0] e32-ttl-100-datasheet-en-v1-0.pdf
@@ -29,6 +30,7 @@
 #define E32100_MAX_BUFFER_LEN 			58
 #define E32100_MODE_CHANGE_INTERVAL 	2
 #define E32100_COMMAND_INTERVAL			5
+#define E32100_TRANSMIT_TIMEOUT			10
 
 #define E32100_DEFAULT_CHANNEL		 	433
 #define E32100_DEFAULT_ADDH				0x00
@@ -168,6 +170,8 @@ typedef struct E32100_Config_s{
 }E32100_Config_t;
 
 void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GPIO_TypeDef * M1_t, uint16_t M1, GPIO_TypeDef * AUX_t, uint16_t AUX);
+uint8_t E32100_TestConnection();
+void E32100_Command(E32100_Command_e cmd);
 
 void E32100_SetMode (E32100_Mode_e mode);
 void E32100_SetConfig(E32100_Config_t config, bool save);
@@ -177,7 +181,10 @@ void E32100_Reset(void);
 void E32100_GetConfig(uint8_t * buffer);
 void E32100_GetModuleVersion(uint8_t * buffer);
 
-void E32100_Transmit(const uint8_t* payload, uint8_t size);
+uint8_t E32100_ReadAUX(void);
+void E32100_WaitAUX_H(uint16_t timeout_ms);
+
+void E32100_Transmit(const uint8_t* payload, uint16_t size);
 void E32100_Receive(void);
 
 uint8_t * E32100_GetBuffer(void);
