@@ -12,15 +12,16 @@
  *
  *  22.12.2023 : Created E32-TTL-100 module driver.
  *	12.01.2024 : AUX Pin taken into account.
- *
+ *  14.01.2024 : UART Receive DMA abort (bugfix). 
+ * 
  *  References:
  *  [0] e32-ttl-100-datasheet-en-v1-0.pdf
  *  [1] semtech-sx127x-series-datasheet.pdf
  *
  */
 
-#ifndef INC_E32100_H_
-#define INC_E32100_H_
+#ifndef E32100_H_
+#define E32100_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,9 +29,10 @@
 #include "serial.h"
 
 #define E32100_MAX_BUFFER_LEN 			58
-#define E32100_MODE_CHANGE_INTERVAL 	2
+#define E32100_MODE_CHANGE_INTERVAL 	20
+#define E32100_AUX_CHANGE_INTERVAL 		2
 #define E32100_COMMAND_INTERVAL			5
-#define E32100_TRANSMIT_TIMEOUT			10
+#define E32100_TRANSMIT_TIMEOUT			50
 
 #define E32100_DEFAULT_CHANNEL		 	433
 #define E32100_DEFAULT_ADDH				0x00
@@ -158,7 +160,6 @@ typedef struct E32100_Handle_s{
 	uint16_t AUX_Pin;
 
 	E32100_Mode_e mode;
-
 }E32100_Handle_t;
 
 typedef struct E32100_Config_s{
@@ -193,4 +194,4 @@ uint8_t E32100_SpedByte 	(E32100_Sped_t sped);
 uint8_t E32100_OptionByte 	(E32100_Option_t option);
 uint8_t E32100_ChannelByte 	(uint16_t channel);
 
-#endif /* INC_E32100_H_ */
+#endif /* E32100_H_ */

@@ -12,6 +12,7 @@
  *
  *  22.12.2023 : Created E32-TTL-100 module driver.
  *	12.01.2024 : AUX Pin taken into account.
+ *  14.01.2024 : UART Receive DMA abort (bugfix). 
  *
  *  References:
  *  [0] e32-ttl-100-datasheet-en-v1-0.pdf
@@ -21,7 +22,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "E32100.h"
 #include "serial.h"
 
@@ -46,25 +46,28 @@ void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GP
 	E32100_SetMode(E32100_MODE_NORMAL);
 	E32100_handle.mode = E32100_MODE_NORMAL;
 
+	HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
 	E32100_WaitAUX_H(1000);
 }
 
-uint8_t E32100_TestConnection(void){
-	E32100_WaitAUX_H(10);
-	if(!E32100_ReadAUX()) return 0;
 
-	uint8_t temp;
-	E32100_GetConfig(&temp);
-	if(temp!=0){
-		return 1;
+
+uint8_t E32100_TestConnection(void){
+	if(!E32100_ReadAUX()){
+		E32100_WaitAUX_H(1000);
+		if(!E32100_ReadAUX()) return 0;
 	}
-	return 0;
+	return 1;
 }
 
 void E32100_SetMode(E32100_Mode_e mode){
 
-	E32100_WaitAUX_H(10);
-	if(!E32100_ReadAUX()) return;
+	if(!E32100_ReadAUX()){
+		E32100_WaitAUX_H(1000);
+		if(!E32100_ReadAUX()) return;
+		HAL_Delay(E32100_AUX_CHANGE_INTERVAL);
+	}
+	HAL_UART_AbortReceive(E32100_huart);
 
 	uint8_t _m0 = 0;
 	uint8_t _m1 = 0;
@@ -84,7 +87,6 @@ void E32100_SetConfig(E32100_Config_t config, bool save){
 
 	if(E32100_handle.mode!=E32100_MODE_SLEEP) {
 		E32100_SetMode(E32100_MODE_SLEEP);
-		HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
 	}
 
 	uint8_t param[6];
@@ -125,19 +127,24 @@ void E32100_SetDefaultConfig(void){
 void E32100_Command(E32100_Command_e cmd){
 	if(E32100_handle.mode!=E32100_MODE_SLEEP) {
 		E32100_SetMode(E32100_MODE_SLEEP);
-		HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
+		HAL_Delay(100);
+	}
+
+	if(!E32100_ReadAUX()){
+		E32100_WaitAUX_H(100);
+		if(!E32100_ReadAUX()) return;
+		HAL_Delay(E32100_AUX_CHANGE_INTERVAL);
 	}
 
 	uint8_t param[3] = {cmd,cmd,cmd};
 	HAL_UART_Transmit(E32100_huart, param, 3, 10);
-	HAL_Delay(E32100_COMMAND_INTERVAL);
 }
 
 
 void E32100_Reset(void){
 	E32100_Command(E32100_CMD_RESET);
-	E32100_WaitAUX_H(1000);
 	E32100_SetMode(E32100_MODE_NORMAL);
+	E32100_WaitAUX_H(1000);
 }
 
 void E32100_GetConfig(uint8_t * buffer){
@@ -148,7 +155,7 @@ void E32100_GetConfig(uint8_t * buffer){
 
 void E32100_GetModuleVersion(uint8_t * buffer){
 	E32100_Command(E32100_CMD_MODULE);
-	HAL_UART_Receive(E32100_huart, buffer, 6, 100);
+	HAL_UART_Receive(E32100_huart, buffer, 5, 100);
 	E32100_SetMode(E32100_MODE_NORMAL);
 }
 
@@ -159,9 +166,9 @@ uint8_t E32100_ReadAUX(void){
 
 void E32100_WaitAUX_H(uint16_t timeout_ms){
 	uint16_t cnt = 0 ;
-	while(cnt < timeout_ms && !E32100_ReadAUX()){
-		cnt++;
+	while(timeout_ms>cnt && !E32100_ReadAUX()){
 		HAL_Delay(1);
+		cnt++;
 	}
 }
 
@@ -169,9 +176,9 @@ void E32100_Transmit(const uint8_t* payload, uint16_t size){
 	if(!E32100_ReadAUX()){
 		E32100_WaitAUX_H(E32100_TRANSMIT_TIMEOUT);
 		if(!E32100_ReadAUX()) return;
+		HAL_Delay(E32100_AUX_CHANGE_INTERVAL);
 	}
-	if(size>E32100_MAX_BUFFER_LEN) return;
-	HAL_UART_Transmit_DMA(E32100_huart, payload, size);
+	HAL_UART_Transmit(E32100_huart, payload, size,100);
 }
 
 void E32100_Receive(void){
