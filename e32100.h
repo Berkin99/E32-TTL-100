@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef E32100_H_
-#define E32100_H_
+#ifndef INC_E32100_H_
+#define INC_E32100_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,7 +32,7 @@
 #define E32100_MODE_CHANGE_INTERVAL 	20
 #define E32100_AUX_CHANGE_INTERVAL 		2
 #define E32100_COMMAND_INTERVAL			5
-#define E32100_TRANSMIT_TIMEOUT			50
+#define E32100_TRANSMIT_TIMEOUT			100
 
 #define E32100_DEFAULT_CHANNEL		 	433
 #define E32100_DEFAULT_ADDH				0x00
@@ -176,6 +176,7 @@ void E32100_Command(E32100_Command_e cmd);
 
 void E32100_SetMode (E32100_Mode_e mode);
 void E32100_SetConfig(E32100_Config_t config, bool save);
+void E32100_GetDefaultConfig(E32100_Config_t * config);
 void E32100_SetDefaultConfig(void);
 
 void E32100_Reset(void);
@@ -194,4 +195,4 @@ uint8_t E32100_SpedByte 	(E32100_Sped_t sped);
 uint8_t E32100_OptionByte 	(E32100_Option_t option);
 uint8_t E32100_ChannelByte 	(uint16_t channel);
 
-#endif /* E32100_H_ */
+#endif /* INC_E32100_H_ */

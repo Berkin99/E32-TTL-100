@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "E32100.h"
+#include "e32100.h"
 #include "serial.h"
 
 static UART_HandleTypeDef *E32100_huart;
@@ -49,8 +49,6 @@ void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GP
 	HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
 	E32100_WaitAUX_H(1000);
 }
-
-
 
 uint8_t E32100_TestConnection(void){
 	if(!E32100_ReadAUX()){
@@ -103,23 +101,25 @@ void E32100_SetConfig(E32100_Config_t config, bool save){
 	HAL_UART_Transmit(E32100_huart, param, 6, 100);
 }
 
+void E32100_GetDefaultConfig(E32100_Config_t * config){
+	config->addh = E32100_DEFAULT_ADDH;
+	config->addl = E32100_DEFAULT_ADDL;
+	config->channel = E32100_DEFAULT_CHANNEL;
+
+	config->sped.airDataRate = E32100_ADR_2400;
+	config->sped.baudRate = E32100_BAUD_RATE_9600;
+	config->sped.parity = E32100_PARITY_8N1;
+
+	config->option.fec = E32100_FEC_OFF;
+	config->option.ioMode = E32100_IOMODE_ON;
+	config->option.txMode = E32100_TXMODE_TRANSPARENT;
+	config->option.wakeUpTime = E32100_WAKEUP_250;
+	config->option.txPower = E32100_TXPOWER_20;
+}
+
 void E32100_SetDefaultConfig(void){
 	E32100_Config_t conf;
-
-	conf.addh = E32100_DEFAULT_ADDH;
-	conf.addh = E32100_DEFAULT_ADDL;
-	conf.channel = E32100_DEFAULT_CHANNEL;
-
-	conf.sped.airDataRate = E32100_ADR_2400;
-	conf.sped.baudRate = E32100_BAUD_RATE_9600;
-	conf.sped.parity = E32100_PARITY_8N1;
-
-	conf.option.fec = E32100_FEC_ON;
-	conf.option.ioMode = E32100_IOMODE_ON;
-	conf.option.txMode = E32100_TXMODE_TRANSPARENT;
-	conf.option.wakeUpTime = E32100_WAKEUP_250;
-	conf.option.txPower = E32100_TXPOWER_20;
-
+	E32100_GetDefaultConfig(&conf);
 	E32100_SetConfig(conf, false);
 	E32100_SetMode(E32100_MODE_NORMAL);
 }
