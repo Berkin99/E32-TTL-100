@@ -10,9 +10,12 @@
  *  DMA Receive.
  *  Changeable all possible settings.
  *
+ *	Updates and bug reports :  @ https://github.com/Berkin99/E32-TTL-100
+ *
  *  22.12.2023 : Created E32-TTL-100 module driver.
  *	12.01.2024 : AUX Pin taken into account.
- *  14.01.2024 : UART Receive DMA abort (bugfix). 
+ *  14.01.2024 : UART Receive DMA abort (bugfix).
+ *  22.01.2024 : DMA is optional.
  *
  *  References:
  *  [0] e32-ttl-100-datasheet-en-v1-0.pdf
@@ -27,8 +30,6 @@
 
 static UART_HandleTypeDef *E32100_huart;
 static E32100_Handle_t E32100_handle;
-static uint8_t buffer[E32100_MAX_BUFFER_LEN];
-
 
 void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GPIO_TypeDef * M1_t, uint16_t M1, GPIO_TypeDef * AUX_t, uint16_t AUX){
 
@@ -45,7 +46,7 @@ void E32100_Init(UART_HandleTypeDef *huart, GPIO_TypeDef * M0_t ,uint16_t M0, GP
 
 	E32100_SetMode(E32100_MODE_NORMAL);
 	E32100_handle.mode = E32100_MODE_NORMAL;
-
+	E32100_handle.com_state = E32100_COM_IDLE;
 	HAL_Delay(E32100_MODE_CHANGE_INTERVAL);
 	E32100_WaitAUX_H(1000);
 }
@@ -178,16 +179,53 @@ void E32100_Transmit(const uint8_t* payload, uint16_t size){
 		if(!E32100_ReadAUX()) return;
 		HAL_Delay(E32100_AUX_CHANGE_INTERVAL);
 	}
+
+	if(E32100_handle.com_state != E32100_COM_TX) {
+		E32100_Abort();
+		E32100_handle.com_state = E32100_COM_TX;
+	}
+
 	HAL_UART_Transmit(E32100_huart, payload, size,100);
 }
 
-void E32100_Receive(void){
+void E32100_Receive(uint8_t * buffer, uint16_t size){
+	if(E32100_handle.com_state != E32100_COM_RX) {
+		E32100_Abort();
+		E32100_handle.com_state = E32100_COM_RX;
+	}
+
+	HAL_UART_Receive(E32100_huart, buffer, size, E32100_RECEIVE_TIMEOUT);
+}
+
+void E32100_Transmit_DMA(const uint8_t* payload, uint16_t size){
+	if(!E32100_ReadAUX()){
+		E32100_WaitAUX_H(E32100_TRANSMIT_TIMEOUT);
+		if(!E32100_ReadAUX()) return;
+		HAL_Delay(E32100_AUX_CHANGE_INTERVAL);
+	}
+
+	if(E32100_handle.com_state != E32100_COM_TXDMA) {
+		E32100_Abort();
+		E32100_handle.com_state = E32100_COM_TXDMA;
+	}
+
+	HAL_UART_Transmit_DMA(E32100_huart, payload, size);
+}
+
+void E32100_Receive_DMA(uint8_t * buffer){
+
+	if(E32100_handle.com_state != E32100_COM_RXDMA) {
+		E32100_Abort();
+		E32100_handle.com_state = E32100_COM_RXDMA;
+	}
+
 	HAL_UARTEx_ReceiveToIdle_DMA(E32100_huart, buffer, E32100_MAX_BUFFER_LEN);
 }
 
-uint8_t * E32100_GetBuffer(void){
-	return buffer;
+void E32100_Abort(void){
+	HAL_UART_Abort(E32100_huart);
 }
+
 
 uint8_t E32100_SpedByte (E32100_Sped_t sped){
 	uint8_t temp=((uint8_t)(sped.airDataRate)<<E32100_OFFSET_AIRDATARATE);

@@ -10,9 +10,12 @@
  *  DMA Receive.
  *  Changeable all possible settings.
  *
+ *	Updates and bug reports :  @ https://github.com/Berkin99/E32-TTL-100
+ *
  *  22.12.2023 : Created E32-TTL-100 module driver.
  *	12.01.2024 : AUX Pin taken into account.
  *  14.01.2024 : UART Receive DMA abort (bugfix). 
+ *  22.01.2024 : DMA is optional.
  * 
  *  References:
  *  [0] e32-ttl-100-datasheet-en-v1-0.pdf
@@ -20,8 +23,8 @@
  *
  */
 
-#ifndef INC_E32100_H_
-#define INC_E32100_H_
+#ifndef E32100_H_
+#define E32100_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,7 +35,8 @@
 #define E32100_MODE_CHANGE_INTERVAL 	20
 #define E32100_AUX_CHANGE_INTERVAL 		2
 #define E32100_COMMAND_INTERVAL			5
-#define E32100_TRANSMIT_TIMEOUT			100
+#define E32100_TRANSMIT_TIMEOUT			200
+#define E32100_RECEIVE_TIMEOUT			200
 
 #define E32100_DEFAULT_CHANNEL		 	433
 #define E32100_DEFAULT_ADDH				0x00
@@ -64,6 +68,14 @@ typedef enum {
 	E32100_MODE_POWERSAVE,
 	E32100_MODE_SLEEP
 }E32100_Mode_e;
+
+typedef enum {
+	E32100_COM_IDLE,
+	E32100_COM_RX,
+	E32100_COM_TX,
+	E32100_COM_RXDMA,
+	E32100_COM_TXDMA
+}E32100_ComState_e;
 
 /*  In sleep mode（mode 3：M1=1, M0=1）, it supports below instructions on list.
  *	Only support 9600 and 8N1 format when set
@@ -160,6 +172,7 @@ typedef struct E32100_Handle_s{
 	uint16_t AUX_Pin;
 
 	E32100_Mode_e mode;
+	E32100_ComState_e com_state;
 }E32100_Handle_t;
 
 typedef struct E32100_Config_s{
@@ -187,12 +200,15 @@ uint8_t E32100_ReadAUX(void);
 void E32100_WaitAUX_H(uint16_t timeout_ms);
 
 void E32100_Transmit(const uint8_t* payload, uint16_t size);
-void E32100_Receive(void);
+void E32100_Receive(uint8_t * buffer, uint16_t size);
 
-uint8_t * E32100_GetBuffer(void);
+void E32100_Transmit_DMA(const uint8_t* payload, uint16_t size);
+void E32100_Receive_DMA(uint8_t * buffer);
+
+void E32100_Abort(void);
 
 uint8_t E32100_SpedByte 	(E32100_Sped_t sped);
 uint8_t E32100_OptionByte 	(E32100_Option_t option);
 uint8_t E32100_ChannelByte 	(uint16_t channel);
 
-#endif /* INC_E32100_H_ */
+#endif /* E32100_H_ */
