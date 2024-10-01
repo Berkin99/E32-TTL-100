@@ -1,4 +1,4 @@
-# E-Byte E32TTL100 Unoffical Module Driver
+# E-Byte E32-TTL-100 Unoffical Module Driver
 
 E32TTL100 module is based on Semtech SX1278 chip. 
 Library configured for UART communication. All Setting changes, Direct memory access, 
