@@ -68,8 +68,8 @@ void E32100_SetMode(E32100_Handle_t* self, E32100_Mode_e mode){
 	uint8_t _m0 = 0;
 	uint8_t _m1 = 0;
 
-	if(((uint8_t)mode & (1U<<0))>0) _m0 = 1;
-	if(((uint8_t)mode & (1U<<1))>0) _m1 = 1;
+	if(((uint8_t)mode & (1U<<0)) > 0) _m0 = 1;
+	if(((uint8_t)mode & (1U<<1)) > 0) _m1 = 1;
 
 	self->pinSet(self->M0, _m0);
 	self->pinSet(self->M1, _m1);
@@ -156,17 +156,17 @@ int8_t E32100_Write(E32100_Handle_t* self, const uint8_t* pTxData, uint16_t size
 		if(!self->pinGet(self->AUX)) return;
 		self->delay(E32100_AUX_CHANGE_INTERVAL);
 	}
-	self->write(self->pIntf, pTxData, size);
+	return self->write(self->pIntf, pTxData, size);
 }
 
 int8_t E32100_Read(E32100_Handle_t* self, uint8_t *pRxData, uint16_t size){
-	self->read(self->pIntf, pRxData, size);
+	return self->read(self->pIntf, pRxData, size);
 }
 
 uint8_t E32100_SpedByte (E32100_Sped_t sped){
-	uint8_t temp=((uint8_t)(sped.airDataRate)<<E32100_OFFSET_AIRDATARATE);
-	temp|=((uint8_t)(sped.baudRate)<<E32100_OFFSET_BAUDRATE);
-	temp|=((uint8_t)(sped.parity)<<E32100_OFFSET_PARITY);
+	uint8_t temp = ((uint8_t)(sped.airDataRate) << E32100_OFFSET_AIRDATARATE);
+	temp |= ((uint8_t)(sped.baudRate) << E32100_OFFSET_BAUDRATE);
+	temp |= ((uint8_t)(sped.parity) << E32100_OFFSET_PARITY);
 	return temp;
 }
 
