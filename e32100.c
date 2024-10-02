@@ -171,15 +171,15 @@ uint8_t E32100_SpedByte (E32100_Sped_t sped){
 }
 
 uint8_t E32100_OptionByte (E32100_Option_t option){
-    uint8_t temp=((uint8_t)(option.txPower)<<E32100_OFFSET_TXPOWER);
-    temp |= ((uint8_t)(option.fec)<<E32100_OFFSET_FEC);
-    temp |= ((uint8_t)(option.wakeUpTime)<<E32100_OFFSET_WAKEUP);
-    temp |= ((uint8_t)(option.ioMode)<<E32100_OFFSET_IOMODE);
-    temp |= ((uint8_t)(option.txMode)<<E32100_OFFSET_TXMODE);
+    uint8_t temp = ((uint8_t)(option.txPower) << E32100_OFFSET_TXPOWER);
+    temp |= ((uint8_t)(option.fec) << E32100_OFFSET_FEC);
+    temp |= ((uint8_t)(option.wakeUpTime) << E32100_OFFSET_WAKEUP);
+    temp |= ((uint8_t)(option.ioMode) << E32100_OFFSET_IOMODE);
+    temp |= ((uint8_t)(option.txMode) << E32100_OFFSET_TXMODE);
     return temp;
 }
 
 uint8_t E32100_ChannelByte (uint16_t channel){
-    return (uint8_t)(channel-410);
+    return (uint8_t)(channel - 410);
 }
 

@@ -74,9 +74,9 @@ typedef enum {
 typedef enum {
     E32100_CMD_SAVE_ON      = 0xC0,
     E32100_CMD_READ_CFG     = 0xC1,
-    E32100_CMD_SAVE_OFF        = 0xC2,
+    E32100_CMD_SAVE_OFF     = 0xC2,
     E32100_CMD_MODULE       = 0xC3,
-    E32100_CMD_RESET         = 0xC4
+    E32100_CMD_RESET        = 0xC4
 }E32100_Command_e;
 
 typedef enum {
@@ -153,10 +153,10 @@ typedef struct E32100_Option_s{
 }E32100_Option_t;
 
 typedef struct E32100_Config_s{
-    uint8_t         addh;
-    uint8_t         addl;
-    E32100_Sped_t      sped;
-    uint16_t          channel;
+    uint8_t addh;
+    uint8_t addl;
+    E32100_Sped_t sped;
+    uint16_t channel;
     E32100_Option_t option;
 }E32100_Config_t;
 
@@ -184,9 +184,9 @@ typedef struct E32100_Handle_s{
     void* AUX;
     E32100_PinSet_t pinSet;
     E32100_PinGet_t pinGet;
-    E32100_Read_t   read;
-    E32100_Write_t  write;
-    E32100_Delay_t  delay;
+    E32100_Read_t read;
+    E32100_Write_t write;
+    E32100_Delay_t delay;
 }E32100_Handle_t;
 
 /*
