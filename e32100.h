@@ -1,5 +1,5 @@
 /*
- *  E32100.h
+ *  e32100.h
  *
  *  Created on: Dec 22, 2023
  *  Author: BerkN
