@@ -26,10 +26,10 @@
 #include <stdint.h>
 #include "e32100.h"
 
-E32100_Handle_t E32100_NewHandle(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
+E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
     E32100_PinSet_t setf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf){
 
-    E32100_Handle_t new = {
+    E32100_Device_t new = {
         .mode = E32100_MODE_NORMAL,
         .pIntf = pIntf, 
         .M0 = pinM0, 
@@ -44,12 +44,12 @@ E32100_Handle_t E32100_NewHandle(void* pIntf, void* pinM0, void* pinM1, void* pi
     return new;
 }
 
-void E32100_Init(E32100_Handle_t* self){
+void E32100_Init(E32100_Device_t* self){
     E32100_SetMode(self, E32100_MODE_NORMAL);
     E32100_WaitAUX(self, 1000);
 }
 
-int8_t E32100_TestConnection(E32100_Handle_t* self){
+int8_t E32100_TestConnection(E32100_Device_t* self){
     if(!self->pinGet(self->AUX) ){
         E32100_WaitAUX(self, 1000);
         if(!self->pinGet(self->AUX) ) return E32100_ERROR;
@@ -57,7 +57,7 @@ int8_t E32100_TestConnection(E32100_Handle_t* self){
     return E32100_OK;
 }
 
-void E32100_SetMode(E32100_Handle_t* self, E32100_Mode_e mode){
+void E32100_SetMode(E32100_Device_t* self, E32100_Mode_e mode){
 
     if(!self->pinGet(self->AUX)){
         E32100_WaitAUX(self, 1000);
@@ -78,7 +78,7 @@ void E32100_SetMode(E32100_Handle_t* self, E32100_Mode_e mode){
     self->delay(E32100_MODE_CHANGE_INTERVAL);
 }
 
-void E32100_SetConfig(E32100_Handle_t* self, E32100_Config_t config, uint8_t save){
+void E32100_SetConfig(E32100_Device_t* self, E32100_Config_t config, uint8_t save){
 
     E32100_SetMode(self, E32100_MODE_SLEEP);
 
@@ -109,11 +109,11 @@ E32100_Config_t E32100_GetDefaultConfig(void){
     return config;
 }
 
-void E32100_SetDefaultConfig(E32100_Handle_t* self, uint8_t save){
+void E32100_SetDefaultConfig(E32100_Device_t* self, uint8_t save){
     E32100_SetConfig(self, E32100_GetDefaultConfig(), save);
 }
 
-void E32100_Command(E32100_Handle_t* self, E32100_Command_e cmd){
+void E32100_Command(E32100_Device_t* self, E32100_Command_e cmd){
     if(self->mode != E32100_MODE_SLEEP) E32100_SetMode(self, E32100_MODE_SLEEP);
 
     if(!self->pinGet(self->AUX)){
@@ -126,23 +126,23 @@ void E32100_Command(E32100_Handle_t* self, E32100_Command_e cmd){
     self->write(self->pIntf, param, 3);
 }
 
-void E32100_Reset(E32100_Handle_t* self){
+void E32100_Reset(E32100_Device_t* self){
     E32100_Command(self, E32100_CMD_RESET);
     E32100_SetMode(self, E32100_MODE_NORMAL);
     E32100_WaitAUX(self, 1000);
 }
 
-void E32100_GetConfig(E32100_Handle_t* self, uint8_t* buffer){
+void E32100_GetConfig(E32100_Device_t* self, uint8_t* buffer){
     E32100_Command(self, E32100_CMD_READ_CFG);
     self->read(self->pIntf, buffer, 6);
 }
 
-void E32100_GetModuleVersion(E32100_Handle_t* self, uint8_t* buffer){
+void E32100_GetModuleVersion(E32100_Device_t* self, uint8_t* buffer){
     E32100_Command(self, E32100_CMD_MODULE);
     self->read(self->pIntf, buffer, 5);
 }
 
-void E32100_WaitAUX(E32100_Handle_t* self, uint16_t timeout){
+void E32100_WaitAUX(E32100_Device_t* self, uint16_t timeout){
     uint16_t cnt = 0;
     while(timeout > cnt && !self->pinGet(self->AUX)){
         self->delay(1);
@@ -150,7 +150,7 @@ void E32100_WaitAUX(E32100_Handle_t* self, uint16_t timeout){
     }
 }
 
-int8_t E32100_Write(E32100_Handle_t* self, const uint8_t* pTxData, uint16_t size){
+int8_t E32100_Write(E32100_Device_t* self, const uint8_t* pTxData, uint16_t size){
     if(!self->pinGet(self->AUX)){
         E32100_WaitAUX(self, E32100_TIMEOUT);
         if(!self->pinGet(self->AUX)) return;
@@ -159,7 +159,7 @@ int8_t E32100_Write(E32100_Handle_t* self, const uint8_t* pTxData, uint16_t size
     return self->write(self->pIntf, pTxData, size);
 }
 
-int8_t E32100_Read(E32100_Handle_t* self, uint8_t *pRxData, uint16_t size){
+int8_t E32100_Read(E32100_Device_t* self, uint8_t *pRxData, uint16_t size){
     return self->read(self->pIntf, pRxData, size);
 }
 

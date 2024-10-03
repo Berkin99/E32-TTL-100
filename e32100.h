@@ -176,7 +176,7 @@ typedef void (*E32100_PinSet_t)(void* pin, int8_t mode);
 typedef int8_t (*E32100_PinGet_t)(void* pin);
 
 /* E32100 Object */
-typedef struct E32100_Handle_s{
+typedef struct E32100_Device_s{
     E32100_Mode_e mode;
     void* pIntf;
     void* M0;
@@ -187,7 +187,7 @@ typedef struct E32100_Handle_s{
     E32100_Read_t read;
     E32100_Write_t write;
     E32100_Delay_t delay;
-}E32100_Handle_t;
+}E32100_Device_t;
 
 /*
  *  @brief This API creates a new handle for the E32100 module.
@@ -201,9 +201,9 @@ typedef struct E32100_Handle_s{
  *  @param[in] writef : Function pointer to write data to the module.
  *  @param[in] delayf : Function pointer to introduce delays.
  *
- *  @return A new E32100_Handle_t structure initialized with the provided parameters.
+ *  @return A new E32100_Device_t structure initialized with the provided parameters.
  */
-E32100_Handle_t E32100_NewHandle(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
+E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
     E32100_PinSet_t setf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf);
 
 /*
@@ -213,7 +213,7 @@ E32100_Handle_t E32100_NewHandle(void* pIntf, void* pinM0, void* pinM1, void* pi
  *
  *  @return None
  */
-void E32100_Init(E32100_Handle_t* self);
+void E32100_Init(E32100_Device_t* self);
 
 /*
  *  @brief This API tests the connection by checking the AUX pin.
@@ -223,7 +223,7 @@ void E32100_Init(E32100_Handle_t* self);
  *  @retval 0  -> Success (AUX pin is set)
  *  @retval -1 -> Error (AUX pin is not set)
  */
-int8_t E32100_TestConnection(E32100_Handle_t* self);
+int8_t E32100_TestConnection(E32100_Device_t* self);
 
 /*
  *  @brief This API sets the module's mode using the M0 and M1 pins.
@@ -233,7 +233,7 @@ int8_t E32100_TestConnection(E32100_Handle_t* self);
  *
  *  @return None
  */
-void E32100_SetMode(E32100_Handle_t* self, E32100_Mode_e mode);
+void E32100_SetMode(E32100_Device_t* self, E32100_Mode_e mode);
 
 /*
  *  @brief This API configures the module with the specified settings and saves them if required.
@@ -244,7 +244,7 @@ void E32100_SetMode(E32100_Handle_t* self, E32100_Mode_e mode);
  *
  *  @return None
  */
-void E32100_SetConfig(E32100_Handle_t* self, E32100_Config_t config, uint8_t save);
+void E32100_SetConfig(E32100_Device_t* self, E32100_Config_t config, uint8_t save);
 
 /*
  *  @brief This API retrieves the default configuration for the module.
@@ -261,7 +261,7 @@ E32100_Config_t E32100_GetDefaultConfig(void);
  *
  *  @return None
  */
-void E32100_SetDefaultConfig(E32100_Handle_t* self, uint8_t save);
+void E32100_SetDefaultConfig(E32100_Device_t* self, uint8_t save);
 
 /*
  *  @brief This API sends a command to the module.
@@ -271,7 +271,7 @@ void E32100_SetDefaultConfig(E32100_Handle_t* self, uint8_t save);
  *
  *  @return None
  */
-void E32100_Command(E32100_Handle_t* self, E32100_Command_e cmd);
+void E32100_Command(E32100_Device_t* self, E32100_Command_e cmd);
 
 /*
  *  @brief This API resets the E32100 module and sets it to normal mode.
@@ -280,7 +280,7 @@ void E32100_Command(E32100_Handle_t* self, E32100_Command_e cmd);
  *
  *  @return None
  */
-void E32100_Reset(E32100_Handle_t* self);
+void E32100_Reset(E32100_Device_t* self);
 
 /*
  *  @brief This API retrieves the current configuration from the module.
@@ -290,7 +290,7 @@ void E32100_Reset(E32100_Handle_t* self);
  *
  *  @return None
  */
-void E32100_GetConfig(E32100_Handle_t* self, uint8_t* buffer);
+void E32100_GetConfig(E32100_Device_t* self, uint8_t* buffer);
 
 /*
  *  @brief This API retrieves the module's version information.
@@ -300,7 +300,7 @@ void E32100_GetConfig(E32100_Handle_t* self, uint8_t* buffer);
  *
  *  @return None
  */
-void E32100_GetModuleVersion(E32100_Handle_t* self, uint8_t* buffer);
+void E32100_GetModuleVersion(E32100_Device_t* self, uint8_t* buffer);
 
 /*
  *  @brief This API waits for the AUX pin to be ready within a specified timeout.
@@ -310,7 +310,7 @@ void E32100_GetModuleVersion(E32100_Handle_t* self, uint8_t* buffer);
  *
  *  @return None
  */
-void E32100_WaitAUX(E32100_Handle_t* self, uint16_t timeout);
+void E32100_WaitAUX(E32100_Device_t* self, uint16_t timeout);
 
 /*
  *  @brief This API writes data to the module, checking the AUX pin before transmission.
@@ -322,7 +322,7 @@ void E32100_WaitAUX(E32100_Handle_t* self, uint16_t timeout);
  *  @retval 0  -> Success
  *  @retval >0 -> Warning or Error
  */
-int8_t E32100_Write(E32100_Handle_t* self, const uint8_t* pTxData, uint16_t size);
+int8_t E32100_Write(E32100_Device_t* self, const uint8_t* pTxData, uint16_t size);
 
 /*
  *  @brief This API reads data from the module.
@@ -334,7 +334,7 @@ int8_t E32100_Write(E32100_Handle_t* self, const uint8_t* pTxData, uint16_t size
  *  @retval 0  -> Success
  *  @retval >0 -> Warning or Error
  */
-int8_t E32100_Read(E32100_Handle_t* self, uint8_t *pRxData, uint16_t size);
+int8_t E32100_Read(E32100_Device_t* self, uint8_t *pRxData, uint16_t size);
 
 /*
  *  @brief This API converts the speed configuration into a byte value.
