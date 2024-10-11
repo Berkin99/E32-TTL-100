@@ -160,6 +160,12 @@ typedef struct E32100_Config_s{
     E32100_Option_t option;
 }E32100_Config_t;
 
+/* GPIO Read Pointer */
+typedef int8_t (*E32100_PinRead_t)(void* pin);
+
+/* GPIO Write Pointer */
+typedef void (*E32100_PinWrite_t)(void* pin, int8_t mode);
+
 /* Read via UART Function Pointer */
 typedef int8_t (*E32100_Read_t)(void* pIntf, uint8_t* pRxData, uint16_t len);
 
@@ -169,12 +175,6 @@ typedef int8_t (*E32100_Write_t)(void* pIntf, const uint8_t* pTxData, uint16_t l
 /* Delay Milliseconds Function Pointer */
 typedef void (*E32100_Delay_t)(uint32_t ms);
 
-/* GPIO Write Pointer */
-typedef void (*E32100_PinSet_t)(void* pin, int8_t mode);
-
-/* GPIO Read Pointer */
-typedef int8_t (*E32100_PinGet_t)(void* pin);
-
 /* E32100 Object */
 typedef struct E32100_Device_s{
     E32100_Mode_e mode;
@@ -182,8 +182,8 @@ typedef struct E32100_Device_s{
     void* M0;
     void* M1;
     void* AUX;
-    E32100_PinSet_t pinSet;
-    E32100_PinGet_t pinGet;
+    E32100_PinWrite_t pinWrite;
+    E32100_PinRead_t pinRead;
     E32100_Read_t read;
     E32100_Write_t write;
     E32100_Delay_t delay;
@@ -196,7 +196,8 @@ typedef struct E32100_Device_s{
  *  @param[in] pinM0  : Pin M0 for mode control.
  *  @param[in] pinM1  : Pin M1 for mode control.
  *  @param[in] pinAUX : AUX pin used for checking module status.
- *  @param[in] setf   : Function pointer to set pin state.
+ *  @param[in] setf   : Function pointer to digital write pin state.
+ *  @param[in] getf   : Function pointer to digital read pin state.
  *  @param[in] readf  : Function pointer to read data from the module.
  *  @param[in] writef : Function pointer to write data to the module.
  *  @param[in] delayf : Function pointer to introduce delays.
@@ -204,7 +205,7 @@ typedef struct E32100_Device_s{
  *  @return A new E32100_Device_t structure initialized with the provided parameters.
  */
 E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
-    E32100_PinSet_t setf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf);
+    E32100_PinWrite_t setf, E32100_PinRead_t getf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf);
 
 /*
  *  @brief This API initializes the E32100 module by setting it to normal mode.

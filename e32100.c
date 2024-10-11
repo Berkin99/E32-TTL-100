@@ -27,7 +27,7 @@
 #include "e32100.h"
 
 E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
-    E32100_PinSet_t setf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf){
+    E32100_PinWrite_t setf, E32100_PinWrite_t getf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf){
 
     E32100_Device_t new = {
         .mode = E32100_MODE_NORMAL,
@@ -35,7 +35,8 @@ E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pi
         .M0 = pinM0, 
         .M1 = pinM1, 
         .AUX = pinAUX, 
-        .pinSet = setf,
+        .pinWrite = setf,
+        .pinRead = getf,
         .read = readf, 
         .write = writef, 
         .delay = delayf
@@ -50,18 +51,18 @@ void E32100_Init(E32100_Device_t* self){
 }
 
 int8_t E32100_TestConnection(E32100_Device_t* self){
-    if(!self->pinGet(self->AUX) ){
+    if(!self->pinRead(self->AUX) ){
         E32100_WaitAUX(self, 1000);
-        if(!self->pinGet(self->AUX) ) return E32100_ERROR;
+        if(!self->pinRead(self->AUX) ) return E32100_ERROR;
     }
     return E32100_OK;
 }
 
 void E32100_SetMode(E32100_Device_t* self, E32100_Mode_e mode){
 
-    if(!self->pinGet(self->AUX)){
+    if(!self->pinRead(self->AUX)){
         E32100_WaitAUX(self, 1000);
-        if(!self->pinGet(self->AUX)) return;
+        if(!self->pinRead(self->AUX)) return;
         self->delay(E32100_AUX_CHANGE_INTERVAL);
     }
 
@@ -71,8 +72,8 @@ void E32100_SetMode(E32100_Device_t* self, E32100_Mode_e mode){
     if(((uint8_t)mode & (1U<<0)) > 0) _m0 = 1;
     if(((uint8_t)mode & (1U<<1)) > 0) _m1 = 1;
 
-    self->pinSet(self->M0, _m0);
-    self->pinSet(self->M1, _m1);
+    self->pinWrite(self->M0, _m0);
+    self->pinWrite(self->M1, _m1);
     self->mode = mode;
 
     self->delay(E32100_MODE_CHANGE_INTERVAL);
@@ -116,9 +117,9 @@ void E32100_SetDefaultConfig(E32100_Device_t* self, uint8_t save){
 void E32100_Command(E32100_Device_t* self, E32100_Command_e cmd){
     if(self->mode != E32100_MODE_SLEEP) E32100_SetMode(self, E32100_MODE_SLEEP);
 
-    if(!self->pinGet(self->AUX)){
+    if(!self->pinRead(self->AUX)){
         E32100_WaitAUX(self, 100);
-        if(!self->pinGet(self->AUX)) return;
+        if(!self->pinRead(self->AUX)) return;
         self->delay(E32100_AUX_CHANGE_INTERVAL);
     }
 
@@ -144,16 +145,16 @@ void E32100_GetModuleVersion(E32100_Device_t* self, uint8_t* buffer){
 
 void E32100_WaitAUX(E32100_Device_t* self, uint16_t timeout){
     uint16_t cnt = 0;
-    while(timeout > cnt && !self->pinGet(self->AUX)){
+    while(timeout > cnt && !self->pinRead(self->AUX)){
         self->delay(1);
         cnt++;
     }
 }
 
 int8_t E32100_Write(E32100_Device_t* self, const uint8_t* pTxData, uint16_t size){
-    if(!self->pinGet(self->AUX)){
+    if(!self->pinRead(self->AUX)){
         E32100_WaitAUX(self, E32100_TIMEOUT);
-        if(!self->pinGet(self->AUX)) return;
+        if(!self->pinRead(self->AUX)) return;
         self->delay(E32100_AUX_CHANGE_INTERVAL);
     }
     return self->write(self->pIntf, pTxData, size);
