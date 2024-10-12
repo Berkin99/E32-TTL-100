@@ -182,9 +182,9 @@ typedef struct E32100_Device_s{
     void* M0;
     void* M1;
     void* AUX;
-    E32100_PinWrite_t pinWrite;
     E32100_PinRead_t pinRead;
-    E32100_Read_t read;
+    E32100_PinWrite_t pinWrite;
+    E32100_Read_t  read;
     E32100_Write_t write;
     E32100_Delay_t delay;
 }E32100_Device_t;
@@ -204,8 +204,8 @@ typedef struct E32100_Device_s{
  *
  *  @return A new E32100_Device_t structure initialized with the provided parameters.
  */
-E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
-    E32100_PinWrite_t setf, E32100_PinRead_t getf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf);
+E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX,
+    E32100_PinRead_t getf, E32100_PinWrite_t setf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf);
 
 /*
  *  @brief This API initializes the E32100 module by setting it to normal mode.

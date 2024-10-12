@@ -26,19 +26,19 @@
 #include <stdint.h>
 #include "e32100.h"
 
-E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX, 
-    E32100_PinWrite_t setf, E32100_PinWrite_t getf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf){
+E32100_Device_t E32100_NewDevice(void* pIntf, void* pinM0, void* pinM1, void* pinAUX,
+    E32100_PinRead_t getf, E32100_PinWrite_t setf, E32100_Read_t readf, E32100_Write_t writef, E32100_Delay_t delayf){
 
     E32100_Device_t new = {
         .mode = E32100_MODE_NORMAL,
-        .pIntf = pIntf, 
-        .M0 = pinM0, 
-        .M1 = pinM1, 
-        .AUX = pinAUX, 
-        .pinWrite = setf,
+        .pIntf = pIntf,
+        .M0 = pinM0,
+        .M1 = pinM1,
+        .AUX = pinAUX,
         .pinRead = getf,
-        .read = readf, 
-        .write = writef, 
+		.pinWrite = setf,
+        .read = readf,
+        .write = writef,
         .delay = delayf
     };
 
@@ -154,7 +154,7 @@ void E32100_WaitAUX(E32100_Device_t* self, uint16_t timeout){
 int8_t E32100_Write(E32100_Device_t* self, const uint8_t* pTxData, uint16_t size){
     if(!self->pinRead(self->AUX)){
         E32100_WaitAUX(self, E32100_TIMEOUT);
-        if(!self->pinRead(self->AUX)) return;
+        if(!self->pinRead(self->AUX)) return E32100_ERROR;
         self->delay(E32100_AUX_CHANGE_INTERVAL);
     }
     return self->write(self->pIntf, pTxData, size);
@@ -183,4 +183,3 @@ uint8_t E32100_OptionByte (E32100_Option_t option){
 uint8_t E32100_ChannelByte (uint16_t channel){
     return (uint8_t)(channel - 410);
 }
-
